@@ -1,49 +1,42 @@
 import React, { Component } from 'react';
 import { View, StyleSheet, Text, FlatList,TouchableOpacity } from 'react-native';
 import { ListItem } from 'react-native-elements'
-import firebase from 'firebase';
-import db from '../config'
 import MyHeader from '../components/MyHeader';
+import db from '../config'
 
 export default class BookDonateScreen extends Component{
   constructor(){
     super()
     this.state = {
-      requestedBooksList : []
+      allRequests : []
     }
   this.requestRef= null
   }
 
-  getRequestedBooksList =()=>{
-    this.requestRef = db.collection("requested_books")
+  getAllRequests =()=>{
+    this.requestRef = db.collection("exchange_requests")
     .onSnapshot((snapshot)=>{
-      var requestedBooksList = snapshot.docs.map(document => document.data());
-      this.setState({
-        requestedBooksList : requestedBooksList
-      });
+      var allRequests = []
+      snapshot.forEach((doc) => {
+          allRequests.push(doc.data())
+      })
+      this.setState({allRequests:allRequests})
     })
-  }
-
-  componentDidMount(){
-    this.getRequestedBooksList()
-  }
-
-  componentWillUnmount(){
-    this.requestRef();
   }
 
   keyExtractor = (item, index) => index.toString()
 
   renderItem = ( {item, i} ) =>{
+    console.log(item.item_name);
     return (
       <ListItem
         key={i}
-        title={item.book_name}
-        subtitle={item.reason_to_request}
+        title={item.item_name}
+        subtitle={item.description}
         titleStyle={{ color: 'black', fontWeight: 'bold' }}
         rightElement={
             <TouchableOpacity style={styles.button}>
-              <Text style={{color:'#ffff'}}>View</Text>
+              <Text style={{color:'#ffff'}}>Exchange</Text>
             </TouchableOpacity>
           }
         bottomDivider
@@ -51,22 +44,30 @@ export default class BookDonateScreen extends Component{
     )
   }
 
+  componentDidMount(){
+    this.getAllRequests()
+  }
+
+  componentWillUnmount(){
+    this.requestRef();
+  }
+
   render(){
     return(
       <View style={{flex:1}}>
-        <MyHeader title="Donate Books" navigation ={this.props.navigation}/>
+        <MyHeader title="Barter App"/>
         <View style={{flex:1}}>
           {
-            this.state.requestedBooksList.length === 0
+            this.state.allRequests.length === 0
             ?(
-              <View style={styles.subContainer}>
-                <Text style={{ fontSize: 20}}>List Of All Requested Books</Text>
+              <View style={{flex:1, fontSize: 20, justifyContent:'center', alignItems:'center'}}>
+                <Text style={{ fontSize: 20}}>List of all Barter</Text>
               </View>
             )
             :(
               <FlatList
                 keyExtractor={this.keyExtractor}
-                data={this.state.requestedBooksList}
+                data={this.state.allRequests}
                 renderItem={this.renderItem}
               />
             )
@@ -78,12 +79,6 @@ export default class BookDonateScreen extends Component{
 }
 
 const styles = StyleSheet.create({
-  subContainer:{
-    flex:1,
-    fontSize: 20,
-    justifyContent:'center',
-    alignItems:'center'
-  },
   button:{
     width:100,
     height:30,
